@@ -1,0 +1,22 @@
+---
+- name: Validate configuration
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: false
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Validate variable types
+      ansible.builtin.assert:
+        that:
+          - lab_message is string
+          - tree_package_version is string
+          - connection_limit is integer
+
+    - name: Validate values
+      ansible.builtin.assert:
+        that:
+          - connection_limit >= 10
+          - connection_limit <= 200
+          - tree_package_version is match('^[0-9][A-Za-z0-9.+:~-]*$')

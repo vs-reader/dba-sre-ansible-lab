@@ -4,8 +4,11 @@ default:
     @just --list
 
 check:
-    ansible-playbook --syntax-check configure_lab.yml show.yml
-
+    ansible-playbook --syntax-check configure_lab.yml show.yml validate.yml
+    
+validate:
+    ansible-playbook -i localhost, validate.yml
+    
 ping:
     ansible lab -i inventory.local.ini -m ansible.builtin.ping
 
