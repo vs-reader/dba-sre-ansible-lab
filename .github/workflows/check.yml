@@ -32,6 +32,6 @@ jobs:
 
       - name: Check playbook syntax
         run: just check
-	
+
       - name: Validate configuration
         run: just validate
