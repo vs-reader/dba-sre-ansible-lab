@@ -1,0 +1,13 @@
+---
+- name: Show the deployed stand description
+  hosts: lab
+  gather_facts: false
+  tasks:
+    - name: Read stand description
+      ansible.builtin.command: cat /etc/dba-sre-lesson4/stand.txt
+      register: stand_file
+      changed_when: false
+
+    - name: Show stand description
+      ansible.builtin.debug:
+        var: stand_file.stdout_lines

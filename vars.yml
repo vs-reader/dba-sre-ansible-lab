@@ -1,0 +1,4 @@
+---
+lab_message: "DBA SRE training stand"
+tree_package_version: "2.2.1-1"
+connection_limit: 100

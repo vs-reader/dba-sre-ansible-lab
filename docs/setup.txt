@@ -1,0 +1,60 @@
+НАСТРОЙКА ANSIBLE
+
+1. На первой ВМ установите инструменты.
+
+sudo apt-get update
+sudo apt-get install -y ansible-core just git openssh-client
+ansible --version
+just --version
+
+2. На каждой целевой ВМ проверьте Python и sudo.
+
+python3 --version
+sudo id -u
+
+Если Python отсутствует:
+sudo apt-get install -y python3
+
+3. На первой ВМ создайте SSH-ключ, если такого ключа ещё нет.
+
+ssh-keygen -t ed25519 -f ~/.ssh/ansible_course
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/ansible_course
+
+Закрытый ключ остаётся на первой ВМ. На узлы копируется открытый ключ .pub.
+
+4. Укажите адреса своих трёх ВМ и добавьте ключ.
+
+for ip in IP_1 IP_2 IP_3; do
+  ssh-copy-id -i ~/.ssh/ansible_course.pub student@"$ip"
+done
+
+Пароли узлов запрашиваются по очереди. При первом входе сверьте отпечаток
+ключа сервера с данными администратора.
+
+5. Получите репозиторий и заполните inventory.
+
+git clone https://github.com/vs-reader/dba-sre-ansible-lab.git
+cd dba-sre-ansible-lab
+cp -n inventory.ini inventory.local.ini
+nano inventory.local.ini
+
+[lab]
+db01 ansible_host=IP_1
+db02 ansible_host=IP_2
+db03 ansible_host=IP_3
+
+[lab:vars]
+ansible_user=student
+ansible_python_interpreter=/usr/bin/python3
+ansible_ssh_private_key_file=~/.ssh/ansible_course
+
+6. Проверьте список узлов, подключения и sudo.
+
+ansible-inventory -i inventory.local.ini --graph
+just ping
+ansible lab -i inventory.local.ini -b -K -m ansible.builtin.command -a 'id -u'
+
+Ожидаемый результат: три узла, pong и 0 для каждого узла.
+-K запрашивает пароль sudo. При разных паролях запускайте с --limit db01,
+затем db02 и db03. При sudo без пароля опустите -K.

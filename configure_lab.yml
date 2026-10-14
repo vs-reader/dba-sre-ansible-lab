@@ -1,0 +1,61 @@
+---
+- name: Install a pinned package and manage a stand description
+  hosts: lab
+  become: true
+  gather_facts: false
+  vars_files:
+    - vars.yml
+  pre_tasks:
+    - name: Validate variable types
+      ansible.builtin.assert:
+        that:
+          - lab_message is string
+          - tree_package_version is string
+          - connection_limit is integer
+        fail_msg: "Messages and versions must be strings; connection_limit must be an integer"
+
+    - name: Validate connection limit
+      ansible.builtin.assert:
+        that:
+          - connection_limit >= 10
+          - connection_limit <= 200
+        fail_msg: "connection_limit must be between 10 and 200"
+
+    - name: Require an exact Debian package version
+      ansible.builtin.assert:
+        that:
+          - tree_package_version is match('^[0-9][A-Za-z0-9.+:~-]*$')
+        fail_msg: "Use an exact Debian package version, for example 2.2.1-1, without wildcards"
+
+  tasks:
+    - name: Pin tree version in APT
+      ansible.builtin.template:
+        src: tree.pref.j2
+        dest: /etc/apt/preferences.d/dba-sre-tree.pref
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Install the selected tree version
+      ansible.builtin.apt:
+        name: "tree={{ tree_package_version }}"
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+        allow_downgrade: false
+
+    - name: Create course directory
+      ansible.builtin.file:
+        path: /etc/dba-sre-lesson4
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Write the stand description
+      ansible.builtin.template:
+        src: stand.txt.j2
+        dest: /etc/dba-sre-lesson4/stand.txt
+        owner: root
+        group: root
+        mode: '0644'
